@@ -1,0 +1,540 @@
+/* ==========================================================================
+   1. VARIÁVEIS GLOBAIS (DESIGN SYSTEM)
+   ========================================================================== */
+:root {
+    /* Paleta de Cores (Tema Industrial/Segurança) */
+    --primary-color: #1e293b;       /* Azul Escuro Industrial */
+    --primary-hover: #0f172a;       /* Azul ainda mais escuro para hovers */
+    --accent-color: #0284c7;        /* Azul de Destaque/Ações */
+    --bg-main: #f8fafc;             /* Cinza bem claro para o fundo do sistema */
+    --bg-card: #ffffff;             /* Branco para os cards e seções */
+    
+    /* Cores de Feedback (Status) */
+    --color-success: #16a34a;       /* Verde para Estável/Sucesso */
+    --color-alert: #dc2626;         /* Vermelho para Estoque Crítico */
+    --color-warning: #ca8a04;       /* Amarelo para Atenção */
+    
+    /* Cores de Texto */
+    --text-main: #0f172a;           /* Cinza quase preto para leitura principal */
+    --text-muted: #64748b;          /* Cinza médio para descrições e subtítulos */
+    --border-color: #e2e8f0;        /* Cinza claro para divisórias e bordas */
+
+    /* Fontes e Espaçamentos */
+    --font-stack: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    --transition-fast: 0.2s ease-in-out;
+}
+
+/* ==========================================================================
+   2. CSS RESET (PADRONIZAÇÃO ENTRE NAVEGADORES)
+   ========================================================================== */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-stack);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+}
+/* ==========================================================================
+   3. CABEÇALHO PRINCIPAL (HEADER & NAVIGATION)
+   ========================================================================== */
+.main-header {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Container do Logotipo */
+.logo-container h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.logo-container p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    filter: brightness(1.5); /* Torna o texto cinza um pouco mais claro sobre o fundo escuro */
+}
+
+/* Menu de Navegação */
+.main-nav ul {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.main-nav a {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #cbd5e1; /* Cinza claro para links inativos */
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+/* Estados de Hover e Ativo (Onde o recrutador repara na usabilidade) */
+.main-nav a:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.main-nav a.active {
+    color: #ffffff;
+    background-color: var(--accent-color);
+}
+/* ==========================================================================
+   4. ESTRUTURA GERAL DA PÁGINA & DASHBOARD (CSS GRID)
+   ========================================================================== */
+
+/* Espaçamento do conteúdo principal */
+.main-content {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem; /* Espaçamento saudável entre as seções */
+}
+
+/* Estilo padrão para o cabeçalho de cada seção */
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+    font-size: 1.6rem;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.section-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* Grid de Cards de Métricas */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Estilo base do Card */
+.metric-card {
+    background-color: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+/* Efeito Hover (Interação do Usuário) */
+.metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Conteúdo interno do Card */
+.metric-card h3 {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.metric-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Cores de Destaque por Status do Card */
+.metric-card.alert {
+    border-left: 5px solid var(--color-alert);
+}
+.metric-card.alert .metric-value {
+    color: var(--color-alert);
+}
+
+.metric-card.info {
+    border-left: 5px solid var(--accent-color);
+}
+.metric-card.info .metric-value {
+    color: var(--accent-color);
+}
+
+.metric-card.success {
+    border-left: 5px solid var(--color-success);
+}
+.metric-card.success .metric-value {
+    color: var(--color-success);
+}
+/* ==========================================================================
+   5. FORMULÁRIO DE CADASTRO
+   ========================================================================== */
+
+/* Estilo base do formulário */
+.cadastro-form {
+    background-color: var(--bg-card);
+    padding: 2rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Organização em Linhas (para campos lado a lado) */
+.form-row {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os campos quebrem de linha em ecrãs pequenos */
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Container de cada campo individual */
+.form-group {
+    flex: 1;
+    min-width: 250px; /* Garante responsividade em ecrãs móveis */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Remove a margem extra quando está dentro de uma row */
+.form-row .form-group {
+    margin-bottom: 0;
+}
+
+/* Estilização das Labels */
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Inputs e Selects */
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    background-color: var(--bg-main);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    outline: none; /* Remove o contorno padrão do navegador */
+}
+
+/* Efeito de Foco (Crucial para Acessibilidade e Usabilidade) */
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); /* Sombra suave com a cor de destaque */
+    background-color: #ffffff; /* Fundo branco no campo ativo para dar destaque */
+}
+
+/* Botão de Submissão */
+.btn-submit {
+    display: inline-block;
+    width: 100%; /* Ocupa a largura total no mobile */
+    padding: 0.85rem 2rem;
+    background-color: var(--accent-color);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
+    transition: background-color var(--transition-fast), transform 0.1s ease;
+}
+
+/* Estados do Botão */
+.btn-submit:hover {
+    background-color: #0270a9; /* Azul ligeiramente mais escuro no hover */
+}
+
+.btn-submit:active {
+    transform: scale(0.98); /* Pequeno efeito de clique "pressionado" */
+}
+/* ==========================================================================
+   6. TABELA DE INVENTÁRIO (DADOS E RESPONSIVIDADE)
+   ========================================================================== */
+
+/* Container que permite rolagem lateral no mobile */
+.table-container {
+    width: 100%;
+    overflow-x: auto; /* Cria a barra de rolagem horizontal apenas se necessário */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-card);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Estilo Base da Tabela */
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse; /* Elimina espaços duplos entre as bordas */
+    text-align: left;
+    font-size: 0.95rem;
+}
+
+/* Cabeçalho da Tabela */
+.inventory-table thead {
+    background-color: var(--primary-color);
+    color: #ffffff;
+}
+
+.inventory-table th {
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Células de Conteúdo (Body) */
+.inventory-table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+/* Zebra Striping (Linhas Alternadas) */
+.inventory-table tbody tr:nth-child(even) {
+    background-color: #f8fafc; /* Aplica um cinza bem sutil nas linhas pares */
+}
+
+/* Efeito de destaque ao passar o rato na linha */
+.inventory-table tbody tr:hover {
+    background-color: #f1f5f9; /* Facilita o acompanhamento visual da linha */
+}
+
+/* Célula de Código SKU */
+.sku-cell {
+    font-family: monospace; /* Fonte monoespaçada dá cara de código industrial */
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* Badges de Categoria (Tags Coloridas) */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    text-transform: uppercase;
+}
+
+.badge-materia-prima {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.badge-ferramentas {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+/* Indicadores de Status */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Bolinha de Status usando o pseudo-elemento ::before */
+.status-indicator::before {
+    content: "";
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-indicator.success {
+    color: var(--color-success);
+}
+.status-indicator.success::before {
+    background-color: var(--color-success);
+}
+
+.status-indicator.alert {
+    color: var(--color-alert);
+}
+.status-indicator.alert::before {
+    background-color: var(--color-alert);
+}
+
+/* Botões de Ação na Tabela */
+.btn-action {
+    font-size: 1.1rem;
+    padding: 0.35rem;
+    border-radius: var(--radius-sm);
+    transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn-action:hover {
+    background-color: var(--border-color);
+    transform: scale(1.15); /* Aumenta ligeiramente o ícone no hover */
+}
+/* ==========================================================================
+   7. HISTÓRICO DE MOVIMENTAÇÕES (TIMELINE)
+   ========================================================================== */
+
+/* Container Principal da Timeline */
+.timeline-list {
+    position: relative;
+    padding-left: 2rem; /* Abre espaço no lado esquerdo para a linha vertical */
+    margin-top: 1.5rem;
+}
+
+/* A Linha Vertical da Linha do Tempo (usando pseudo-elemento) */
+.timeline-list::before {
+    content: "";
+    position: absolute;
+    left: 7px; /* Alinha perfeitamente com a bolinha marcadora */
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background-color: var(--border-color);
+}
+
+/* Item Individual da Timeline */
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+/* Remove a margem extra do último item */
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+/* O Marcador Circular (Bolinha da Timeline) */
+.timeline-marker {
+    position: absolute;
+    left: -2rem; /* Move a bolinha de volta para cima da linha vertical */
+    top: 6px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--bg-card);
+    border: 3px solid var(--border-color);
+    z-index: 1; /* Garante que a bolinha fique por cima da linha vertical */
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+/* Caixa de Conteúdo da Timeline */
+.timeline-content {
+    background-color: var(--bg-card);
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Cabeçalho do Card da Timeline */
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* Tag de Data/Hora */
+.timeline-header time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Texto de Descrição */
+.timeline-text {
+    font-size: 0.95rem;
+    color: var(--text-main);
+    margin-bottom: 0.75rem;
+}
+
+/* Identificação do Operador/Responsável */
+.operator-tag {
+    display: inline-block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background-color: var(--bg-main);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   8. CORES DINÂMICAS PARA ENTRADAS E SAÍDAS
+   ========================================================================== */
+
+/* Badges de Entrada e Saída */
+.badge-entrada {
+    background-color: #dcfce7;
+    color: var(--color-success);
+}
+
+.badge-saida {
+    background-color: #fee2e2;
+    color: var(--color-alert);
+}
+
+/* Mudança de cor da bolinha marcadora baseada no status */
+.status-entrada .timeline-marker {
+    border-color: var(--color-success);
+}
+
+.status-saida .timeline-marker {
+    border-color: var(--color-alert);
+}
+
+/* Pequeno efeito interativo ao passar o rato no item */
+.timeline-item:hover .timeline-marker {
+    background-color: var(--primary-color);
+}

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EstoqueCerto - Gestão Industrial</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- CABEÇALHO DO SISTEMA -->
+    <header class="main-header">
+        <div class="logo-container">
+            <h1>🛡️ EstoqueCerto</h1>
+            <p>Gestão Industrial</p>
+        </div>
+
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#dashboard" class="active">Painel</a></li>
+                <li><a href="#produtos">Produtos</a></li>
+                <li><a href="#movimentacoes">Movimentações</a></li>
+                <li><a href="#relatorios">Relatórios</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main-content">
+        <main class="main-content">
+
+            <!-- SEÇÃO DO DASHBOARD -->
+            <section id="dashboard" class="dashboard-section">
+
+                <header class="section-header">
+                    <h2>Painel de Controle</h2>
+                    <p>Visão geral do inventário industrial em tempo real.</p>
+                </header>
+
+                <!-- CARDS DE MÉTRICAS -->
+                <div class="metrics-grid">
+
+                    <!-- Card de Alerta -->
+                    <article class="metric-card alert">
+                        <h3>Itens Críticos</h3>
+                        <p class="metric-value">05</p>
+                        <span class="metric-desc">Abaixo do estoque mínimo</span>
+                    </article>
+
+                    <!-- Card Informativo -->
+                    <article class="metric-card info">
+                        <h3>Total de Itens</h3>
+                        <p class="metric-value">1.240</p>
+                        <span class="metric-desc">Peças cadastradas</span>
+                    </article>
+
+                    <!-- Card de Sucesso -->
+                    <article class="metric-card success">
+                        <h3>Movimentações (Hoje)</h3>
+                        <p class="metric-value">+48</p>
+                        <span class="metric-desc">Entradas e saídas</span>
+                    </article>
+
+                </div>
+
+            </section>
+            <section id="cadastro" class="cadastro-section">
+
+                <header class="section-header">
+                    <h2>Cadastrar Novo Item</h2>
+                    <p>Insira as informações do produto para atualizar o inventário industrial.</p>
+                </header>
+
+                <form action="#" method="POST" class="cadastro-form">
+
+                    <div class="form-group">
+                        <label for="nome-produto">Nome do Item/Componente</label>
+                        <input type="text" id="nome-produto" name="nome-produto" placeholder="Ex: Chapa de Aço Inox 304"
+                            required autocomplete="off">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="codigo-sku">Código SKU (Identificador)</label>
+                            <input type="text" id="codigo-sku" name="codigo-sku" placeholder="Ex: SKU-10293" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="categoria">Categoria</label>
+                            <select id="categoria" name="categoria" required>
+                                <option value="" disabled selected>Selecione uma categoria</option>
+                                <option value="materia-prima">Matéria-Prima</option>
+                                <option value="ferramentas">Ferramentas</option>
+                                <option value="produtos-acabados">Produtos Acabados</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="quantidade">Quantidade Inicial</label>
+                            <input type="number" id="quantidade" name="quantidade" min="0" placeholder="0" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="estoque-minimo">Estoque Mínimo (Alerta)</label>
+                            <input type="number" id="estoque-minimo" name="estoque-minimo" min="1" placeholder="Ex: 10"
+                                required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">🛡️ Registrar no Estoque</button>
+
+                </form>
+
+            </section>
+            <section id="inventario" class="inventario-section">
+        
+        <header class="section-header">
+            <h2>Inventário de Produtos</h2>
+            <p>Lista de materiais disponíveis, níveis de estoque e ações de controle.</p>
+        </header>
+
+        <div class="table-container">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Código SKU</th>
+                        <th scope="col">Nome do Item</th>
+                        <th scope="col">Categoria</th>
+                        <th scope="col">Qtd. Atual</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="sku-cell">SKU-10293</td>
+                        <td><strong>Chapa de Aço Inox 304</strong></td>
+                        <td><span class="badge badge-materia-prima">Matéria-Prima</span></td>
+                        <td>150 un</td>
+                        <td><span class="status-indicator success">Estável</span></td>
+                        <td>
+                            <button type="button" class="btn-action edit" aria-label="Editar Chapa de Aço Inox 304">✏️</button>
+                            <button type="button" class="btn-action delete" aria-label="Excluir Chapa de Aço Inox 304">🗑️</button>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="sku-cell">SKU-40592</td>
+                        <td><strong>Parafuso Sextavado M12</strong></td>
+                        <td><span class="badge badge-ferramentas">Ferramentas</span></td>
+                        <td>8 un</td>
+                        <td><span class="status-indicator alert">Estoque Crítico</span></td>
+                        <td>
+                            <button type="button" class="btn-action edit" aria-label="Editar Parafuso Sextavado M12">✏️</button>
+                            <button type="button" class="btn-action delete" aria-label="Excluir Parafuso Sextavado M12">🗑️</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+    <section id="movimentacoes" class="movimentacoes-section">
+        
+        <header class="section-header">
+            <h2>Movimentações Recentes</h2>
+            <p>Registro em tempo real de entradas e saídas do estoque.</p>
+        </header>
+
+        <ul class="timeline-list" aria-label="Histórico de movimentações de estoque">
+            
+            <li class="timeline-item status-saida">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <span class="badge badge-saida">SAÍDA</span>
+                        <time datetime="2026-07-13T14:30">Hoje às 14:30</time>
+                    </div>
+                    <p class="timeline-text">
+                        Retirada de <strong>50 un</strong> de <em>Chapa de Aço Inox 304</em> para a Linha de Produção B.
+                    </p>
+                    <span class="operator-tag">Responsável: Tec. João Silva</span>
+                </div>
+            </li>
+
+            <li class="timeline-item status-entrada">
+                <div class="timeline-marker"></div>
+                <div class="timeline-content">
+                    <div class="timeline-header">
+                        <span class="badge badge-entrada">ENTRADA</span>
+                        <time datetime="2026-07-13T09:15">Hoje às 09:15</time>
+                    </div>
+                    <p class="timeline-text">
+                        Abastecimento de <strong>200 un</strong> de <em>Parafuso Sextavado M12</em> recebidos do fornecedor Metalúrgica Sul.
+                    </p>
+                    <span class="operator-tag">Responsável: Tec. Maria Souza</span>
+                </div>
+            </li>
+
+        </ul>
+
+    </section>
+        </main>
+    </main>
+
+    <!-- RODAPÉ DO SISTEMA -->
+    <footer class="main-footer">
+        <p>&copy; 2026 EstoqueCerto - Todos os direitos reservados.</p>
+    </footer>
+<script src="script.js"></script>
+</body>
+</body>
+
+</html>

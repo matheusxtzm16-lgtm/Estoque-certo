@@ -1,0 +1,1 @@
+-- Criação da tabela de produtos caso ainda não exista

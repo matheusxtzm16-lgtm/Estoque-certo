@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle - Logística Industrial</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ==========================================================================
+       1. CABEÇALHO PRINCIPAL
+       ========================================================================== -->
+    <header class="main-header">
+        <div class="logo-container">
+            <h1>INDÚSTRIA LOG</h1>
+            <p>Sistema de Gestão e Controle de Estoque</p>
+        </div>
+        
+        <!-- Navegação e Identificação do Usuário / Logout -->
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <nav class="main-nav">
+                <ul style="display: flex; list-style: none; gap: 15px; margin: 0; padding: 0;">
+                    <li><a href="#" class="active">Dashboard</a></li>
+                    <li><a href="#inventario">Inventário</a></li>
+                    <li><a href="#movimentacoes">Movimentações</a></li>
+                </ul>
+            </nav>
+            <div id="user-session-info" style="color: white; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 15px;">
+                <span id="display-username">Carregando...</span>
+                <button type="button" id="btn-logout" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Sair</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==========================================================================
+       1.1 BANNER DE ALERTA CRÍTICO (Notificações Visuais)
+       ========================================================================== -->
+    <div id="banner-alerta-critico" style="display: none; background: #e74c3c; color: white; padding: 12px 20px; text-align: center; font-weight: bold; font-size: 0.95rem; box-shadow: inset 0 -3px 0 rgba(0,0,0,0.2);">
+        ⚠️ Atenção! Existem itens com estoque zerado ou abaixo do mínimo. Verifique o inventário imediatamente!
+    </div>
+
+    <!-- ==========================================================================
+       2. CONTEÚDO PRINCIPAL
+       ========================================================================== -->
+    <main class="main-content">
+
+        <!-- Seção: Visão Geral (Cards de Alertas e Categorias com Tooltips Otimizados) -->
+        <section class="metrics-section">
+            <div class="section-header">
+                <h2>Visão Geral do Armazém</h2>
+                <p>Métricas detalhadas e por categoria em tempo real. Passe o mouse sobre os cards para inspecionar os relatórios.</p>
+            </div>
+
+            <div class="metrics-grid">
+                <!-- Card 1: Em Falta -->
+                <div class="metric-card danger">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">🚨 Itens em Falta (Esgotados)</strong>
+                        <div id="tooltip-em-falta-texto" class="tooltip-body">Nenhum item em falta</div>
+                    </div>
+                    <h3>Em Falta</h3>
+                    <div class="metric-value">00</div>
+                    <p class="metric-desc" id="metric-faltam-desc">Estoque zerado</p>
+                </div>
+
+                <!-- Card 2: Próximo de Faltar -->
+                <div class="metric-card warning">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">⚠️ Próximo de Faltar (Abaixo do Mínimo)</strong>
+                        <div id="tooltip-proximo-faltar-texto" class="tooltip-body">Nenhum item em alerta</div>
+                    </div>
+                    <h3>Próximo de Faltar</h3>
+                    <div class="metric-value">00</div>
+                    <p class="metric-desc" id="metric-proximo-faltar-desc">Dentro do limite seguro</p>
+                </div>
+
+                <!-- Card 3: Total Geral -->
+                <div class="metric-card info">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">📦 Inventário Geral</strong>
+                        <div id="tooltip-total-texto" class="tooltip-body">Nenhum item cadastrado</div>
+                    </div>
+                    <h3>Total de Peças</h3>
+                    <div class="metric-value">0</div>
+                    <p class="metric-desc" id="metric-total-desc">Nenhum item cadastrado</p>
+                </div>
+
+                <!-- Card 4: Matéria-Prima -->
+                <div class="metric-card cat-materia-prima">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">🧪 Matéria-Prima</strong>
+                        <div id="tooltip-cat-materia-prima" class="tooltip-body">Nenhum item</div>
+                    </div>
+                    <h3>Matéria-Prima</h3>
+                    <div class="metric-value" id="val-cat-materia-prima">0</div>
+                    <p class="metric-desc" id="desc-cat-materia-prima">Volume total</p>
+                </div>
+
+                <!-- Card 5: Ferramentas -->
+                <div class="metric-card cat-ferramentas">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">🔧 Ferramentas</strong>
+                        <div id="tooltip-cat-ferramentas" class="tooltip-body">Nenhum item</div>
+                    </div>
+                    <h3>Ferramentas</h3>
+                    <div class="metric-value" id="val-cat-ferramentas">0</div>
+                    <p class="metric-desc" id="desc-cat-ferramentas">Volume total</p>
+                </div>
+
+                <!-- Card 6: Insumos -->
+                <div class="metric-card cat-insumos">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">🧪 Insumos</strong>
+                        <div id="tooltip-cat-insumos" class="tooltip-body">Nenhum item</div>
+                    </div>
+                    <h3>Insumos</h3>
+                    <div class="metric-value" id="val-cat-insumos">0</div>
+                    <p class="metric-desc" id="desc-cat-insumos">Volume total</p>
+                </div>
+
+                <!-- Card 7: Equipamentos -->
+                <div class="metric-card cat-equipamentos">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">⚙️ Equipamentos</strong>
+                        <div id="tooltip-cat-equipamentos" class="tooltip-body">Nenhum item</div>
+                    </div>
+                    <h3>Equipamentos</h3>
+                    <div class="metric-value" id="val-cat-equipamentos">0</div>
+                    <p class="metric-desc" id="desc-cat-equipamentos">Volume total</p>
+                </div>
+
+                <!-- Card 8: EPIs -->
+                <div class="metric-card cat-epi">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">🛡️ EPIs (Segurança)</strong>
+                        <div id="tooltip-cat-epi" class="tooltip-body">Nenhum item</div>
+                    </div>
+                    <h3>EPIs</h3>
+                    <div class="metric-value" id="val-cat-epi">0</div>
+                    <p class="metric-desc" id="desc-cat-epi">Volume total</p>
+                </div>
+
+                <!-- Card 9: Embalagens -->
+                <div class="metric-card cat-embalagens">
+                    <div class="metric-tooltip">
+                        <strong class="tooltip-title">📦 Embalagens</strong>
+                        <div id="tooltip-cat-embalagens" class="tooltip-body">Nenhum item</div>
+                    </div>
+                    <h3>Embalagens</h3>
+                    <div class="metric-value" id="val-cat-embalagens">0</div>
+                    <p class="metric-desc" id="desc-cat-embalagens">Volume total</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção: Formulário de Cadastro / Edição -->
+        <section class="form-section">
+            <div class="section-header">
+                <h2>Cadastrar Novo Item</h2>
+                <p>Adicione matéria-prima, ferramentas, insumos ou equipamentos ao inventário do armazém.</p>
+            </div>
+
+            <form class="cadastro-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nome-produto">Nome do Produto</label>
+                        <input type="text" id="nome-produto" placeholder="Ex: Chapa de Aço Inox" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="codigo-sku">Código SKU</label>
+                        <input type="text" id="codigo-sku" placeholder="Ex: SKU-99999" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="categoria">Categoria</label>
+                        <select id="categoria" required>
+                            <option value="" disabled selected>Selecione a categoria</option>
+                            <option value="materia-prima">Matéria-Prima</option>
+                            <option value="ferramentas">Ferramentas</option>
+                            <option value="insumos">Insumos</option>
+                            <option value="equipamentos">Equipamentos</option>
+                            <option value="epi">EPIs (Segurança)</option>
+                            <option value="embalagens">Embalagens</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantidade">Quantidade Atual</label>
+                        <input type="number" id="quantidade" min="0" placeholder="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="estoque-minimo">Estoque Mínimo</label>
+                        <input type="number" id="estoque-minimo" min="0" placeholder="0" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Cadastrar no Inventário</button>
+            </form>
+        </section>
+
+        <!-- Seção: Inventário Atual (Tabela com Busca e Filtros) -->
+        <section id="inventario" class="table-section">
+            <div class="section-header table-header-flex">
+                <div>
+                    <h2>Inventário Atual</h2>
+                    <p>Lista de todos os itens cadastrados no sistema em tempo real.</p>
+                </div>
+                <!-- Barra de Pesquisa e Filtros Rápidos -->
+                <div class="table-controls">
+                    <input type="text" id="input-busca" placeholder="🔍 Buscar por nome ou SKU..." class="search-input">
+                    
+                    <div class="filter-buttons" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                        <button type="button" class="filter-btn active" data-filter="todos">Todos</button>
+                        <button type="button" class="filter-btn" data-filter="materia-prima">Matéria-Prima</button>
+                        <button type="button" class="filter-btn" data-filter="ferramentas">Ferramentas</button>
+                        <button type="button" class="filter-btn" data-filter="insumos">Insumos</button>
+                        <button type="button" class="filter-btn" data-filter="equipamentos">Equipamentos</button>
+                        <button type="button" class="filter-btn" data-filter="epi">EPIs</button>
+                        <button type="button" class="filter-btn" data-filter="embalagens">Embalagens</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Nome do Item</th>
+                            <th>Categoria</th>
+                            <th>Quantidade</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Preenchido dinamicamente pelo script.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Seção: Histórico de Movimentações (Timeline) -->
+        <section id="movimentacoes" class="timeline-section">
+            <div class="section-header">
+                <h2>Histórico de Movimentações</h2>
+                <p>Registro cronológico das entradas e saídas no armazém.</p>
+            </div>
+
+            <ul class="timeline-list">
+                <!-- Injetado via script.js -->
+            </ul>
+        </section>
+
+    </main>
+
+    <!-- Cliente Socket.io para Atualizações em Tempo Real -->
+    <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

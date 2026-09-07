@@ -1,0 +1,11 @@
+# Dependências do Node (raiz ou subpastas)
+node_modules/
+**/node_modules/
+
+# Variáveis de ambiente e senhas (raiz ou subpastas)
+.env
+**/.env
+
+# Arquivos do sistema e builds
+.DS_Store
+dist/

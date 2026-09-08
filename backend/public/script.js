@@ -18,7 +18,10 @@
 // ==========================================================================
 const form = document.querySelector('.cadastro-form');
 const tabelaInventario = document.querySelector('.inventory-table tbody');
-const listaMovimentacoes = document.querySelector('.timeline-list');
+// Mapeamento atualizado para suportar o layout em colunas separadas (Entradas e Saídas)
+const tabelaMovimentacoesEntradas = document.getElementById('tabela-entradas-tbody');
+const tabelaMovimentacoesSaidas = document.getElementById('tabela-saidas-tbody');
+const tabelaMovimentacoesAntiga = document.getElementById('movimentacoes-tbody'); // Retrocompatibilidade caso use tabela antiga
 const btnSubmitForm = form ? form.querySelector('button[type="submit"]') : null;
 
 // Campos do Formulário
@@ -37,6 +40,7 @@ let categoriaAtiva = 'todos';
 let idProdutoEmEdicao = null;
 
 const API_URL = 'http://localhost:3000/api/produtos';
+const API_MOVIMENTACOES_URL = 'http://localhost:3000/api/movimentacoes';
 
 let produtos = [];
 let totalMovimentacoesHoje = parseInt(localStorage.getItem('total_movimentacoes')) || 48;
@@ -44,6 +48,7 @@ let totalMovimentacoesHoje = parseInt(localStorage.getItem('total_movimentacoes'
 document.addEventListener('DOMContentLoaded', function() {
     inicializarSessaoUsuario();
     carregarProdutosDoServidor();
+    carregarMovimentacoesDoServidor();
     inicializarWebSocket();
 });
 
@@ -94,7 +99,14 @@ function inicializarWebSocket() {
                 produtos = dados.produtos;
                 renderizarTabela();
                 atualizarDashboard();
+            } else {
+                carregarProdutosDoServidor();
             }
+        });
+
+        socket.on('nova_movimentacao', (movimentacao) => {
+            console.log('Nova movimentação via Socket!', movimentacao);
+            carregarMovimentacoesDoServidor();
         });
 
         socket.on('connect_error', () => {
@@ -155,6 +167,7 @@ function verificarAlertasCriticos(itensCriticosCount) {
             document.body.prepend(banner);
         }
 
+        banner.style.display = 'flex';
         banner.innerHTML = `
             <span>⚠️ ATENÇÃO: Existem ${itensCriticosCount} produto(s) com estoque zerado ou abaixo do mínimo!</span>
             <a href="#inventario" style="color: white; text-decoration: underline; background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px;">Ver Inventário</a>
@@ -165,7 +178,7 @@ function verificarAlertasCriticos(itensCriticosCount) {
             window.alertaSonoroDisparado = true;
         }
     } else {
-        if (banner) banner.remove();
+        if (banner) banner.style.display = 'none';
         window.alertaSonoroDisparado = false;
     }
 }
@@ -235,11 +248,10 @@ if (form) {
                     const errData = await resposta.json().catch(() => ({}));
                     throw new Error(errData.erro || errData.message || 'Erro ao salvar produto no servidor.');
                 }
-
-                adicionarRegistroTimeline(nome, quantidade);
             }
 
             await carregarProdutosDoServidor();
+            await carregarMovimentacoesDoServidor();
             form.reset();
 
         } catch (erro) {
@@ -284,6 +296,18 @@ async function carregarProdutosDoServidor() {
     }
 }
 
+async function carregarMovimentacoesDoServidor() {
+    try {
+        const resposta = await fetch(API_MOVIMENTACOES_URL);
+        if (!resposta.ok) throw new Error('Erro ao buscar histórico de movimentações.');
+
+        const movimentacoes = await resposta.json();
+        renderizarTimeline(movimentacoes);
+    } catch (erro) {
+        console.error('Erro ao carregar movimentações:', erro);
+    }
+}
+
 async function excluirProdutoDoServidor(id, linhaElemento) {
     if (!confirm('Deseja realmente excluir este produto?')) return;
 
@@ -305,6 +329,7 @@ async function excluirProdutoDoServidor(id, linhaElemento) {
         produtos = produtos.filter(p => p.id !== id);
         if (linhaElemento) linhaElemento.remove();
         atualizarDashboard();
+        carregarMovimentacoesDoServidor();
     } catch (erro) {
         console.error('Erro de exclusão:', erro);
         alert(erro.message || 'Erro ao processar exclusão no servidor.');
@@ -327,7 +352,7 @@ function prepararEdicao(produto) {
 }
 
 // ==========================================================================
-// 4. RENDERIZAÇÃO DA TABELA E DASHBOARD
+// 4. RENDERIZAÇÃO DA TABELA, TIMELINE E DASHBOARD
 // ==========================================================================
 function renderizarTabela() {
     if (!tabelaInventario) return;
@@ -371,10 +396,52 @@ function renderizarTabela() {
             <td>${produto.quantidade} un</td>
             <td><span class="status-indicator ${statusClasse}">${statusTexto}</span></td>
             <td>
-                <button type="button" class="btn-action edit" title="Editar" style="margin-right: 8px; cursor: pointer; background: transparent; border: none; font-size: 1rem;">✏️</button>
+                <button type="button" class="btn-action saida" title="Registrar Saída" style="cursor: pointer; background: transparent; border: none; font-size: 1rem; margin-right: 6px;">➖</button>
+                <button type="button" class="btn-action edit" title="Editar" style="cursor: pointer; background: transparent; border: none; font-size: 1rem; margin-right: 6px;">✏️</button>
                 <button type="button" class="btn-action delete" title="Excluir" style="cursor: pointer; background: transparent; border: none; font-size: 1rem;">🗑️</button>
             </td>
         `;
+
+        const btnSaida = novaLinha.querySelector('.saida');
+        if (btnSaida) {
+            btnSaida.addEventListener('click', async () => {
+                const qtdRetirada = prompt(`Quantas unidades de "${produto.nome}" deseja retirar? (Estoque atual: ${produto.quantidade})`);
+                if (!qtdRetirada || isNaN(qtdRetirada)) return;
+
+                const quantidadeNum = parseInt(qtdRetirada);
+                if (quantidadeNum <= 0) return;
+
+                if (quantidadeNum > produto.quantidade) {
+                    alert('A quantidade de saída não pode ser maior do que o estoque atual!');
+                    return;
+                }
+
+                try {
+                    const token = localStorage.getItem('token');
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+                    const resposta = await fetch(API_MOVIMENTACOES_URL, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            produto_id: produto.id,
+                            quantidade: quantidadeNum,
+                            tipo: 'SAIDA'
+                        })
+                    });
+
+                    if (!resposta.ok) throw new Error('Erro ao registrar saída no servidor.');
+
+                    alert('Saída registrada com sucesso!');
+                    await carregarProdutosDoServidor();
+                    await carregarMovimentacoesDoServidor();
+                } catch (erro) {
+                    console.error('Erro ao registrar saída:', erro);
+                    alert(erro.message || 'Não foi possível registrar a saída.');
+                }
+            });
+        }
 
         novaLinha.querySelector('.edit').addEventListener('click', () => prepararEdicao(produto));
         
@@ -387,29 +454,89 @@ function renderizarTabela() {
     });
 }
 
-function adicionarRegistroTimeline(nome, quantidade) {
-    if (!listaMovimentacoes) return;
+function renderizarTimeline(movimentacoes) {
+    // Compatibilidade com o novo layout de colunas separadas (Entradas e Saídas)
+    if (tabelaMovimentacoesEntradas && tabelaMovimentacoesSaidas) {
+        tabelaMovimentacoesEntradas.innerHTML = '';
+        tabelaMovimentacoesSaidas.innerHTML = '';
 
-    const novoItem = document.createElement('li');
-    novoItem.className = 'timeline-item status-entrada';
+        if (!Array.isArray(movimentacoes) || movimentacoes.length === 0) {
+            tabelaMovimentacoesEntradas.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #7f8c8d; padding: 1rem;">Nenhuma entrada.</td></tr>`;
+            tabelaMovimentacoesSaidas.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #7f8c8d; padding: 1rem;">Nenhuma saída.</td></tr>`;
+            
+            const totalEntradasEl = document.getElementById('valor-total-entradas');
+            const totalSaidasEl = document.getElementById('valor-total-saidas');
+            if (totalEntradasEl) totalEntradasEl.textContent = '0 un';
+            if (totalSaidasEl) totalSaidasEl.textContent = '0 un';
+            return;
+        }
 
-    const agora = new Date();
-    const horaFormatada = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        let somaEntradas = 0;
+        let somaSaidas = 0;
 
-    novoItem.innerHTML = `
-        <div class="timeline-marker"></div>
-        <div class="timeline-content">
-            <div class="timeline-header">
-                <span class="badge badge-entrada">ENTRADA</span>
-                <time>Hoje às ${horaFormatada}</time>
-            </div>
-            <p class="timeline-text">Abastecimento de <strong>${quantidade} un</strong> de <em>${nome}</em>.</p>
-        </div>
-    `;
+        movimentacoes.forEach(mov => {
+            const novaLinha = document.createElement('tr');
+            const tipoMov = (mov.tipo || 'ENTRADA').toUpperCase();
+            const dataMov = new Date(mov.created_at || Date.now());
+            const dataFormatada = dataMov.toLocaleDateString('pt-BR');
+            const nomeProduto = mov.produtos && mov.produtos.nome ? mov.produtos.nome : 'Produto Desconhecido';
+            const qtd = mov.quantidade || 0;
 
-    listaMovimentacoes.insertBefore(novoItem, listaMovimentacoes.firstChild);
-    totalMovimentacoesHoje++;
-    localStorage.setItem('total_movimentacoes', totalMovimentacoesHoje);
+            novaLinha.innerHTML = `
+                <td>${dataFormatada}</td>
+                <td>${nomeProduto}</td>
+                <td><strong>${qtd} un</strong></td>
+            `;
+
+            if (tipoMov === 'ENTRADA') {
+                somaEntradas += qtd;
+                tabelaMovimentacoesEntradas.appendChild(novaLinha);
+            } else {
+                somaSaidas += qtd;
+                tabelaMovimentacoesSaidas.appendChild(novaLinha);
+            }
+        });
+
+        // Preenche totais caso os elementos existam no novo HTML
+        const totalEntradasEl = document.getElementById('valor-total-entradas');
+        const totalSaidasEl = document.getElementById('valor-total-saidas');
+        const saldoGeralEl = document.getElementById('valor-saldo-geral');
+
+        if (totalEntradasEl) totalEntradasEl.textContent = `${somaEntradas} un`;
+        if (totalSaidasEl) totalSaidasEl.textContent = `${somaSaidas} un`;
+        if (saldoGeralEl) {
+            const saldo = somaEntradas - somaSaidas;
+            saldoGeralEl.textContent = `${saldo} un`;
+        }
+        return;
+    }
+
+    // Retrocompatibilidade para o ID antigo caso exista
+    if (tabelaMovimentacoesAntiga) {
+        tabelaMovimentacoesAntiga.innerHTML = '';
+        if (!Array.isArray(movimentacoes) || movimentacoes.length === 0) {
+            tabelaMovimentacoesAntiga.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #7f8c8d; padding: 2rem;">Nenhuma movimentação registrada.</td></tr>`;
+            return;
+        }
+
+        movimentacoes.forEach(mov => {
+            const novaLinha = document.createElement('tr');
+            const tipoMov = (mov.tipo || 'ENTRADA').toUpperCase();
+            const ehEntrada = tipoMov === 'ENTRADA';
+            const corFundoBadge = ehEntrada ? '#27ae60' : '#e74c3c';
+            const dataMov = new Date(mov.created_at || Date.now());
+            const dataFormatada = dataMov.toLocaleString('pt-BR');
+            const nomeProduto = mov.produtos && mov.produtos.nome ? mov.produtos.nome : 'Produto Desconhecido';
+
+            novaLinha.innerHTML = `
+                <td>${dataFormatada}</td>
+                <td><span style="padding: 3px 8px; border-radius: 4px; color: white; background: ${corFundoBadge}; font-size: 0.85rem; font-weight: bold;">${tipoMov}</span></td>
+                <td>${nomeProduto}</td>
+                <td><strong>${mov.quantidade || 0}</strong> un</td>
+            `;
+            tabelaMovimentacoesAntiga.appendChild(novaLinha);
+        });
+    }
 }
 
 function atualizarDashboard() {
@@ -424,15 +551,6 @@ function atualizarDashboard() {
     let nomesEmFalta = [];
     let nomesProximoFaltar = [];
     let todosNomesResumo = [];
-
-    const categoriasStats = {
-        'materia-prima': { total: 0, html: '', itens: [] },
-        'ferramentas': { total: 0, html: '', itens: [] },
-        'insumos': { total: 0, html: '', itens: [] },
-        'equipamentos': { total: 0, html: '', itens: [] },
-        'epi': { total: 0, html: '', itens: [] },
-        'embalagens': { total: 0, html: '', itens: [] }
-    };
 
     produtos.forEach((produto) => {
         totalPecas += produto.quantidade;
@@ -452,12 +570,6 @@ function atualizarDashboard() {
             itensProximoFaltar++;
             nomesProximoFaltar.push(produto.nome);
             htmlProximoFaltar += `<div class="tooltip-row">⚠️ <strong>${produto.nome}</strong> <span class="t-badge">${catFormatada}</span> - Restam: <b>${produto.quantidade} un</b> (Mín: ${qtdMin})</div>`;
-        }
-
-        if (categoriasStats[cat]) {
-            categoriasStats[cat].total += produto.quantidade;
-            categoriasStats[cat].itens.push(produto.nome);
-            categoriasStats[cat].html += `<div class="tooltip-row">📦 <strong>${produto.nome}</strong>: <b>${produto.quantidade} un</b></div>`;
         }
     });
 

@@ -331,3 +331,94 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .timeline-header time { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
 .timeline-text { font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.75rem; }
 .badge-entrada { background-color: #dcfce7; color: var(--color-success); }
+
+/* ==========================================================================
+   SUPLEMENTO DE ESTILOS PARA O NOVO LAYOUT DE MOVIMENTAÇÕES (COLUNAS LADO A LADO)
+   ========================================================================== */
+
+/* Container Principal do Dashboard Financeiro/Movimentações (Atualizado para 2 colunas simétricas) */
+.dashboard-financeiro-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: stretch;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .dashboard-financeiro-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Blocos de Colunas */
+.bloco-coluna {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Cabeçalhos dos Blocos */
+.cabecalho-bloco {
+    padding: 1.25rem;
+    color: #ffffff;
+    text-align: center;
+}
+
+.cabecalho-bloco.verde {
+    background-color: var(--color-success);
+}
+
+.cabecalho-bloco.vermelho {
+    background-color: var(--color-alert);
+}
+
+.cabecalho-bloco h2 {
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.valor-destaque {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+/* Tabelas internas das colunas */
+.bloco-coluna .tabela-container {
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    flex: 1;
+}
+
+.bloco-coluna table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.bloco-coluna th {
+    background-color: #f1f5f9;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.bloco-coluna td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.bloco-coluna tbody tr:hover {
+    background-color: #f8fafc;
+}

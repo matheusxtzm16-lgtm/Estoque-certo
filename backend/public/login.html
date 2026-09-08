@@ -242,16 +242,72 @@
             </div>
         </section>
 
-        <!-- Seção: Histórico de Movimentações (Timeline) -->
-        <section id="movimentacoes" class="timeline-section">
-            <div class="section-header">
-                <h2>Histórico de Movimentações</h2>
-                <p>Registro cronológico das entradas e saídas no armazém.</p>
+        <!-- Seção: Histórico de Movimentações (Modificado para colunas verticais lado a lado) -->
+        <section id="movimentacoes" class="table-section">
+            <div class="section-header table-header-flex">
+                <div>
+                    <h2>Histórico de Movimentações</h2>
+                    <p>Registro cronológico das entradas e saídas no armazém organizadas em colunas verticais.</p>
+                </div>
             </div>
 
-            <ul class="timeline-list">
-                <!-- Injetado via script.js -->
-            </ul>
+            <!-- Container estruturado em colunas verticais (inspirado no modelo financeiro) -->
+            <div class="dashboard-financeiro-container">
+                
+                <!-- COLUNA DA ESQUERDA: ENTRADAS -->
+                <section class="bloco-coluna bloco-entradas">
+                    <div class="cabecalho-bloco verde">
+                        <h2>TOTAL DE ENTRADAS</h2>
+                        <span id="valor-total-entradas" class="valor-destaque">R$ 0,00</span>
+                    </div>
+                    <div class="tabela-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data / Hora</th>
+                                    <th>Produto</th>
+                                    <th>Qtd</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-entradas-tbody">
+                                <!-- Preenchido via JS (Entradas) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- COLUNA DA DIREITA: SAÍDAS -->
+                <section class="bloco-coluna bloco-saidas">
+                    <div class="cabecalho-bloco vermelho">
+                        <h2>TOTAL DE SAÍDAS</h2>
+                        <span id="valor-total-saidas" class="valor-destaque">R$ 0,00</span>
+                    </div>
+                    <div class="tabela-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data / Hora</th>
+                                    <th>Produto</th>
+                                    <th>Qtd</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabela-saidas-tbody">
+                                <!-- Preenchido via JS (Saídas) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Tabela original mantida oculta ou preservada caso o script dependa dela para compatibilidade -->
+            <div class="table-container" style="display:none;">
+                <table class="inventory-table">
+                    <tbody id="movimentacoes-tbody">
+                        <!-- Mantido integro para compatibilidade com o script.js existente -->
+                    </tbody>
+                </table>
+            </div>
         </section>
 
     </main>

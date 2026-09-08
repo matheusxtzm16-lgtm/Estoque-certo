@@ -103,17 +103,19 @@ app.get('/api/produtos', async (req, res) => {
     }
 });
 
-// 3. Rota para Cadastrar Produto (POST)
+// 3. Rota para Cadastrar Produto + Registrar Entrada Inicial (POST)
 app.post('/api/produtos', async (req, res) => {
     try {
-        const { codigo_barras, nome, categoria, quantidade, quantidade_minima, unidade_medida } = req.body;
+        const { codigo_barras, nome, categoria, quantidade, quantidade_minima, unidade_medida, usuario_id } = req.body;
 
         if (!nome || nome.trim() === '') {
             return res.status(400).json({ erro: 'O nome do produto é obrigatório.' });
         }
 
-        console.log('📦 Cadastrando produto:', { nome, categoria, quantidade });
+        const qtdInicial = parseInt(quantidade, 10) || 0;
+        console.log('📦 Cadastrando produto:', { nome, categoria, quantidade: qtdInicial });
 
+        // 3.1 Cadastra o produto no banco
         const { data, error } = await supabase
             .from('produtos')
             .insert([
@@ -121,7 +123,7 @@ app.post('/api/produtos', async (req, res) => {
                     codigo_barras: codigo_barras ? codigo_barras.trim() : '', 
                     nome: nome.trim(), 
                     categoria: categoria || 'materia-prima', 
-                    quantidade: parseInt(quantidade, 10) || 0, 
+                    quantidade: qtdInicial, 
                     quantidade_minima: parseInt(quantidade_minima, 10) || 0, 
                     unidade_medida: unidade_medida || 'un' 
                 }
@@ -133,17 +135,130 @@ app.post('/api/produtos', async (req, res) => {
             return res.status(400).json({ erro: error.message });
         }
 
-        // Notifica clientes em tempo real via WebSocket
+        const novoProduto = data ? data[0] : null;
+
+        // 3.2 Se houver quantidade inicial (> 0), grava automaticamente a movimentação de ENTRADA
+        if (novoProduto && qtdInicial > 0) {
+            const { data: movData, error: movError } = await supabase
+                .from('movimentacoes')
+                .insert([
+                    {
+                        produto_id: novoProduto.id,
+                        usuario_id: usuario_id || null,
+                        tipo: 'ENTRADA',
+                        quantidade: qtdInicial
+                    }
+                ])
+                .select();
+
+            if (movError) {
+                console.error('⚠️ Produto criado, mas falhou ao gravar movimentação de entrada:', movError.message);
+            } else if (movData && movData[0]) {
+                io.emit('nova_movimentacao', movData[0]);
+            }
+        }
+
+        // Notifica atualização na lista de produtos
         io.emit('atualizar_inventario');
 
-        res.status(201).json({ mensagem: 'Produto cadastrado com sucesso!', produto: data ? data[0] : null });
+        res.status(201).json({ mensagem: 'Produto cadastrado com sucesso!', produto: novoProduto });
     } catch (err) {
         console.error('❌ Erro na comunicação com Supabase:', err.message || err);
         res.status(500).json({ erro: 'Falha ao comunicar com o banco de dados.' });
     }
 });
 
-// 4. Rota para Atualizar Produto (PUT) -> ADICIONADA/CORRIGIDA
+// 4. Rota para Registrar Saída / Baixa do Estoque (POST)
+// Ajustada para aceitar tanto /api/movimentacoes/saida quanto POST direto em /api/movimentacoes quando o tipo for SAIDA
+app.post(['/api/movimentacoes/saida', '/api/movimentacoes'], async (req, res) => {
+    try {
+        const { produto_id, quantidade, usuario_id, tipo } = req.body;
+
+        // Se a rota chamada foi /api/movimentacoes genérica mas enviaram um tipo diferente (ou sem tipo sabendo que é saída), tratamos
+        // Mantém total compatibilidade caso o front envie para /api/movimentacoes ou /api/movimentacoes/saida
+        if (req.path === '/api/movimentacoes' && tipo && tipo !== 'SAIDA') {
+            return res.status(400).json({ erro: 'Esta rota é exclusiva para saídas. Utilize o endpoint correto.' });
+        }
+
+        const qtdSaida = parseInt(quantidade, 10);
+
+        if (!produto_id || isNaN(qtdSaida) || qtdSaida <= 0) {
+            return res.status(400).json({ erro: 'Produto e quantidade válida são obrigatórios.' });
+        }
+
+        // 4.1 Busca o produto para verificar o estoque atual
+        const { data: produto, error: errProd } = await supabase
+            .from('produtos')
+            .select('*')
+            .eq('id', produto_id)
+            .single();
+
+        if (errProd || !produto) {
+            return res.status(404).json({ erro: 'Produto não encontrado.' });
+        }
+
+        if (produto.quantidade < qtdSaida) {
+            return res.status(400).json({ erro: 'Quantidade insuficiente em estoque.' });
+        }
+
+        // 4.2 Atualiza a quantidade do produto
+        const novaQtd = produto.quantidade - qtdSaida;
+        const { error: errUpdate } = await supabase
+            .from('produtos')
+            .update({ quantidade: novaQtd })
+            .eq('id', produto_id);
+
+        if (errUpdate) throw errUpdate;
+
+        // 4.3 Registra a movimentação de SAÍDA
+        const { data: movData, error: errMov } = await supabase
+            .from('movimentacoes')
+            .insert([
+                {
+                    produto_id: produto_id,
+                    usuario_id: usuario_id || null,
+                    tipo: 'SAIDA',
+                    quantidade: qtdSaida
+                }
+            ])
+            .select();
+
+        if (errMov) throw errMov;
+
+        // Emite atualizações em tempo real
+        io.emit('atualizar_inventario');
+        if (movData && movData[0]) {
+            io.emit('nova_movimentacao', movData[0]);
+        }
+
+        res.json({ mensagem: 'Saída registrada com sucesso!', movimentacao: movData ? movData[0] : null });
+    } catch (err) {
+        console.error('❌ Erro ao registrar saída:', err.message || err);
+        res.status(500).json({ erro: 'Falha ao registrar saída no banco de dados.' });
+    }
+});
+
+// 5. Rota para Buscar Movimentações / Histórico para a Timeline (GET)
+app.get('/api/movimentacoes', async (req, res) => {
+    try {
+        const { data: movimentacoes, error } = await supabase
+            .from('movimentacoes')
+            .select('*, produtos(*)')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('❌ ERRO DETALHADO DO SUPABASE NA ROTA /api/movimentacoes:', error);
+            throw error;
+        }
+
+        res.json(movimentacoes || []);
+    } catch (err) {
+        console.error('Erro ao buscar movimentações:', err.message || err);
+        res.status(500).json({ erro: 'Erro ao buscar histórico de movimentações.', detalhe: err.message || err });
+    }
+});
+
+// 6. Rota para Atualizar Produto (PUT)
 app.put('/api/produtos/:id', async (req, res) => {
     const produtoId = parseInt(req.params.id, 10);
 
@@ -188,7 +303,7 @@ app.put('/api/produtos/:id', async (req, res) => {
     }
 });
 
-// 5. Rota para Excluir Produto (DELETE) -> ADICIONADA/CORRIGIDA
+// 7. Rota para Excluir Produto (DELETE)
 app.delete('/api/produtos/:id', async (req, res) => {
     const produtoId = parseInt(req.params.id, 10);
 
